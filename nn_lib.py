@@ -162,8 +162,8 @@ class LinearLayer(Layer):
         #######################################################################
         #                       ** START OF YOUR CODE **
         #######################################################################
-        self._W = None
-        self._b = None
+        self._W = xavier_init(size=(n_in, n_out))
+        self._b = xavier_init(size=(1, n_out))
 
         self._cache_current = None
         self._grad_W_current = None
@@ -186,9 +186,11 @@ class LinearLayer(Layer):
         Returns:
             {np.ndarray} -- Output array of shape (batch_size, n_out)
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Cache necessary information for back propagation
+        self._cache_current = {"x": x}
+
+        # The output is given by Z = XW + B
+        return np.dot(x, self._W) + self._b
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -208,9 +210,17 @@ class LinearLayer(Layer):
             {np.ndarray} -- Array containing gradient with repect to layer
                 input, of shape (batch_size, n_in).
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Gradient of Loss rwt W is X transpose dot grad_z
+        x_transpose = np.transpose(self._cache_current["x"])
+        self._grad_W_current = np.dot(x_transpose, grad_z)
+
+        # Gradient of Loss rwt b is grad_z
+        ones = np.ones((grad_z.shape[0]))
+        self._grad_b_current = np.dot(ones, grad_z)
+
+        # Gradient of Loss rwt X is grad_z dot weight transpose
+        weight_transpose = np.transpose(self._W)
+        return np.dot(grad_z, weight_transpose)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -224,9 +234,11 @@ class LinearLayer(Layer):
         Arguments:
             learning_rate {float} -- Learning rate of update step.
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Wnew = W - learning_rate * grad_W
+        self._W -= learning_rate * self._grad_W_current
+
+        # bnew = b - learning_rate * grad_b
+        self._b -= learning_rate * self._grad_b_current
 
         #######################################################################
         #                       ** END OF YOUR CODE **
