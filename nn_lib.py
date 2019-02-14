@@ -94,21 +94,26 @@ class SigmoidLayer(Layer):
     def __init__(self):
         self._cache_current = None
 
+    @staticmethod
+    def sigmoid(x, derivative=False):
+        y = 1.0 / (1.0 + np.exp(-x))
+        return y * (1 - y) if derivative else y
+
     def forward(self, x):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
-        pass
+        self._cache_current = {"x": x}
+        return np.vectorize(self.sigmoid)(x, False)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
         #######################################################################
 
     def backward(self, grad_z):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
-        pass
+        # Apply elementwise derivation to input x
+        x = self._cache_current["x"]
+        x = np.vectorize(self.sigmoid)(x, True)
+
+        # Gradient of Loss rwt X is grad_z multiply f'(X)
+        return np.multiply(grad_z, x)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -123,21 +128,26 @@ class ReluLayer(Layer):
     def __init__(self):
         self._cache_current = None
 
+    @staticmethod
+    def relu(x, derivative=False):
+        return 1.0 * (x > 0) if derivative else x * (x > 0)
+
+
     def forward(self, x):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
-        pass
+        self._cache_current = {"x": x}
+        return np.vectorize(self.relu)(x, False)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
         #######################################################################
 
     def backward(self, grad_z):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
-        pass
+        # Apply elementwise derivation to input x
+        x = self._cache_current["x"]
+        x = np.vectorize(self.relu)(x, True)
+
+        # Gradient of Loss rwt X is grad_z multiply f'(X)
+        return np.multiply(grad_z, x)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
