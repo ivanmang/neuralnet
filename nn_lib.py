@@ -285,7 +285,7 @@ class MultiLayerNetwork(object):
         Generate a list of layers using input dim, neurons and activations
         """
         # Append input dim to front of neurons
-        neurons = [self.input_dim] + self._neurons
+        neurons = [self.input_dim] + self.neurons
 
         # Final list of layers
         layers = []
