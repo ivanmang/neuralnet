@@ -275,13 +275,37 @@ class MultiLayerNetwork(object):
         self.neurons = neurons
         self.activations = activations
 
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
-        self._layers = None
+        self._layers = self.generate_layers()
         #######################################################################
         #                       ** END OF YOUR CODE **
         #######################################################################
+
+    def generate_layers(self):
+        """
+        Generate a list of layers using input dim, neurons and activations
+        """
+        # Append input dim to front of neurons
+        neurons = [self.input_dim] + self._neurons
+
+        # Final list of layers
+        layers = []
+
+        index = 0
+        while index < len(self.activations):
+            # Create a linear layer
+            layers.append(LinearLayer(neurons[index], neurons[index + 1]))
+
+            # Create activation layer
+            activation = self.activations[index]
+            if activation == "relu":
+                layers.append(ReluLayer())
+            elif activation == "sigmoid":
+                layers.append(SigmoidLayer())
+
+            index += 1
+
+        return layers
+
 
     def forward(self, x):
         """
@@ -294,9 +318,15 @@ class MultiLayerNetwork(object):
             {np.ndarray} -- Output array of shape (batch_size,
                 #_neurons_in_final_layer)
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Initializes output to input
+        output = x
+
+        # For each layer ...
+        for layer in self._layers:
+            # ... create new output using output from previous layer as input
+            output = layer.forward(output)
+
+        return output
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -317,9 +347,12 @@ class MultiLayerNetwork(object):
             {np.ndarray} -- Array containing gradient with repect to layer
                 input, of shape (batch_size, input_dim).
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+
+        # Perform backward propagation for each layer
+        for layer in self._layers[::-1]:
+            grad_z = layer.backward(grad_z)
+
+        return grad_z
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -333,9 +366,8 @@ class MultiLayerNetwork(object):
         Arguments:
             learning_rate {float} -- Learning rate of update step.
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        for layer in self._layers:
+            layer.update_params(learning_rate)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
