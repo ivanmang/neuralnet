@@ -550,9 +550,9 @@ class Preprocessor(object):
         self.a = 0
         self.b = 1
 
-        # Store smallest and largest value in data
-        self.min = np.amin(data)
-        self.max = np.amax(data)
+        # Store min and max of each feature
+        self.x_min = np.amin(data, axis=0)
+        self.x_max = np.amax(data, axis=0)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -568,8 +568,14 @@ class Preprocessor(object):
         Returns:
             {np.ndarray} normalized dataset.
         """
-        # Use equation X' = a + (X - min)(b - a)/(max - min)
-        return self.a + (data - self.min) * (self.b - self.a) / (self.max - self.min)
+
+        # For each data apply equation:
+        # X' = a + (X - min)(b - a)/(max - min)
+        for i in range(len(data)):
+            for j in range(len(data[0])):
+                data[i][j] = self.a + (data[i][j] - self.x_min[j]) * (self.b - self.a) / (self.x_max[j] - self.x_min[j])
+
+        return data
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -585,8 +591,14 @@ class Preprocessor(object):
         Returns:
             {np.ndarray} reverted dataset.
         """
-        # Use equation X = (X' - a)(max - min)/(b - a) + min
-        return (data - self.a) * (self.max - self.min) / (self.b - self.a) + self.min
+        # For each data apply equation
+        # X = (X' - a)(max - min)/(b - a) + min
+
+        for i in range(len(data)):
+            for j in range(len(data[0])):
+                data[i][j] = (data[i][j] - self.a) * (self.x_max[j] - self.x_min[j]) / (self.b - self.a) + self.x_min[j]
+
+        return data
 
         #######################################################################
         #                       ** END OF YOUR CODE **
