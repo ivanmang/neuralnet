@@ -546,9 +546,13 @@ class Preprocessor(object):
             - data {np.ndarray} dataset used to determined the parameters for
             the normalization.
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Scale data to lie in the interval [a, b]
+        self.a = 0
+        self.b = 1
+
+        # Store smallest and largest value in data
+        self.min = np.amin(data)
+        self.max = np.amax(data)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -564,9 +568,8 @@ class Preprocessor(object):
         Returns:
             {np.ndarray} normalized dataset.
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Use equation X' = a + (X - min)(b - a)/(max - min)
+        return self.a + (data - self.min) * (self.b - self.a) / (self.max - self.min)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -582,9 +585,8 @@ class Preprocessor(object):
         Returns:
             {np.ndarray} reverted dataset.
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Use equation X = (X' - a)(max - min)/(b - a) + min
+        return (data - self.a) * (self.max - self.min) / (self.b - self.a) + self.min
 
         #######################################################################
         #                       ** END OF YOUR CODE **
