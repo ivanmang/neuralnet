@@ -318,15 +318,12 @@ class MultiLayerNetwork(object):
             {np.ndarray} -- Output array of shape (batch_size,
                 #_neurons_in_final_layer)
         """
-        # Initializes output to input
-        output = x
-
         # For each layer ...
         for layer in self._layers:
             # ... create new output using output from previous layer as input
-            output = layer.forward(output)
+            x = layer.forward(x)
 
-        return output
+        return x
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -424,13 +421,19 @@ class Trainer(object):
         self.loss_fun = loss_fun
         self.shuffle_flag = shuffle_flag
 
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
-        self._loss_layer = None
+        self._loss_layer = self.generate_layer()
         #######################################################################
         #                       ** END OF YOUR CODE **
         #######################################################################
+
+    def generate_layer(self):
+        """
+        Generate loss layer from the loss_fun argument
+        """
+        if self.loss_fun == "mse":
+            return MSELossLayer()
+        elif self.loss_fun == "cross_entropy":
+            return CrossEntropyLossLayer()
 
     @staticmethod
     def shuffle(input_dataset, target_dataset):
@@ -445,9 +448,12 @@ class Trainer(object):
 
         Returns: 2-tuple of np.ndarray: (shuffled inputs, shuffled_targets).
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+
+        # Shuffle indices
+        indices = np.arange(input_dataset.shape[0])
+        np.random.shuffle(indices)
+
+        return input_dataset[indices], target_dataset[indices]
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -473,9 +479,32 @@ class Trainer(object):
             - target_dataset {np.ndarray} -- Array of corresponding targets, of
                 shape (#_training_data_points, ).
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Performs the following steps nb_epoch times
+        for _ in range(self.nb_epoch):
+
+            # Shuffles the input data
+            if self.shuffle_flag:
+                input_dataset, target_dataset = self.shuffle(input_dataset, target_dataset)
+
+            # Splits data set into batches of size batch size
+            input_batches = np.split(input_dataset, len(input_dataset) / self.batch_size)
+            target_batches = np.split(target_dataset, len(target_dataset) / self.batch_size)
+
+            # For each batch
+            for input, target in zip(input_batches, target_batches):
+
+                # Perform forward pass
+                predict = self.network.forward(input)
+
+                # Compute loss
+                self._loss_layer.forward(predict, target)
+
+                # Perform backward propagation
+                grad_z = self._loss_layer.backward()
+                self.network.backward(grad_z)
+
+                # Perform one step of gradient descent
+                self.network.update_params(self.learning_rate)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -491,9 +520,11 @@ class Trainer(object):
             - target_dataset {np.ndarray} -- Array of corresponding targets, of
                 shape (#_evaluation_data_points, ).
         """
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+        # Predict data using network
+        predict = self.network.forward(input_dataset)
+
+        # Compute loss using loss function
+        return self._loss_layer.forward(predict, target_dataset)
 
         #######################################################################
         #                       ** END OF YOUR CODE **
