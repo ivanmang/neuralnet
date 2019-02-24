@@ -569,13 +569,15 @@ class Preprocessor(object):
             {np.ndarray} normalized dataset.
         """
 
+        new_data = data.copy()
+
         # For each data apply equation:
         # X' = a + (X - min)(b - a)/(max - min)
         for i in range(len(data)):
             for j in range(len(data[0])):
-                data[i][j] = self.a + (data[i][j] - self.x_min[j]) * (self.b - self.a) / (self.x_max[j] - self.x_min[j])
+                new_data[i][j] = self.a + (data[i][j] - self.x_min[j]) * (self.b - self.a) / (self.x_max[j] - self.x_min[j])
 
-        return data
+        return new_data
 
         #######################################################################
         #                       ** END OF YOUR CODE **
@@ -591,14 +593,15 @@ class Preprocessor(object):
         Returns:
             {np.ndarray} reverted dataset.
         """
+        new_data = data.copy()
+
         # For each data apply equation
         # X = (X' - a)(max - min)/(b - a) + min
-
         for i in range(len(data)):
             for j in range(len(data[0])):
-                data[i][j] = (data[i][j] - self.a) * (self.x_max[j] - self.x_min[j]) / (self.b - self.a) + self.x_min[j]
+                new_data[i][j] = (data[i][j] - self.a) * (self.x_max[j] - self.x_min[j]) / (self.b - self.a) + self.x_min[j]
 
-        return data
+        return new_data
 
         #######################################################################
         #                       ** END OF YOUR CODE **
