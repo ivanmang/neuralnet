@@ -11,6 +11,7 @@ from nn_lib import (
     load_network,
 )
 from illustrate import illustrate_results_FM
+def evaluate_architecture(predict, actual):
 
 def evaluate_architecture(trainer, x_train_pre, y_train, x_val_pre, y_val):
     """Returns the mean squared error regression loss of an architecture
@@ -38,7 +39,11 @@ def main():
 
     # Load data
     input_dim = 3
-    dat = np.loadtxt("FM_dataset.dat")
+    neurons = [16,32,3]
+    activations = ["relu","relu","identity"]
+    network = MultiLayerNetwork(input_dim, neurons, activations)
+
+    np.random.shuffle(dataset)
 
     # Shuffle data
     np.random.shuffle(dat)
@@ -47,12 +52,15 @@ def main():
     x = dat[:, :3]
     y = dat[:, 3:]
 
-    # Split data into training and validation set
-    split_idx = int(0.8 * len(x))
-    x_train = x[:split_idx]
-    y_train = y[:split_idx]
-    x_val = x[split_idx:]
-    y_val = y[split_idx:]
+    train_split_idx = int(0.8 * len(x))
+    val_split_idx = int(0.1 * len(x))
+
+    x_train = x[:train_split_idx]
+    y_train = y[:train_split_idx]
+    x_val = x[val_split_idx:train_split_idx]
+    y_val = y[val_split_idx:train_split_idx]
+    x_test = x[val_split_idx:]
+    y_test = y[val_split_idx:]
 
     # Preprocess input data
     x_train_pre = prep_input.apply(x_train)
@@ -73,13 +81,13 @@ def main():
         shuffle_flag=True)
 
     trainer.train(x_train_pre, y_train)
-    print("Train loss = ", trainer.eval_loss(x_train_pre, y_train))
-    print("Validation loss = ", trainer.eval_loss(x_val_pre, y_val))
 
-    preds = net(x_val_pre).argmax(axis=1).squeeze()
-    targets = y_val.argmax(axis=1).squeeze()
-    accuracy = (preds == targets).mean()
-    print("Validation accuracy: {}".format(accuracy))
+    preds = network(x_val_pre).squeeze()
+    # print(preds)
+    targets = y_val.squeeze()
+    # print(targets)
+    accuracy = ((preds - targets)**2).mean()
+    print("MSE: {}".format(accuracy/len(preds)))
 
     evaluate_architecture(trainer, x_train_pre, y_train, x_val_pre, y_val)
     illustrate_results_FM(net, prep_input)
